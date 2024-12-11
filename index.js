@@ -11,7 +11,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 db.serialize(() => {
-  db.each("SELECT rowid AS id, info FROM user_info", (err, row) => {
+  db.each("SELECT * FROM User;", (err, row) => {
     if (err) {
       console.error("Error fetching data", err);
     } else {
