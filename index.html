@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query and Render Data</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    #error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Run Custom SQL Query</h1>
+
+  <!-- User input for SQL query -->
+  <textarea id="sql-query" rows="4" cols="50" placeholder="Enter SQL query"></textarea><br>
+  <button onclick="runQuery()">Execute Query</button>
+  
+  <p id="error"></p> <!-- For displaying error messages -->
+
+  <!-- Table to display query results -->
+  <table id="results-table">
+    <thead>
+      <tr>
+        <!-- Columns will be dynamically added -->
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data will be inserted here dynamically -->
+    </tbody>
+  </table>
+
+  <script>
+    // Function to run the query and display results
+    function runQuery() {
+      const query = document.getElementById('sql-query').value.trim();
+
+      // Show error if query is empty
+      if (!query) {
+        document.getElementById('error').textContent = 'Please enter a query!';
+        return;
+      } else {
+        document.getElementById('error').textContent = '';
+      }
+
+      // Fetch data from the backend using fetch
+      fetch('', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query }) // Send query to the backend
+      })
+      .then(response => response.json())
+      .then(data => {
+        const tableBody = document.getElementById('results-table').getElementsByTagName('tbody')[0];
+        const tableHeader = document.getElementById('results-table').getElementsByTagName('thead')[0].rows[0];
+
+        // Clear previous results
+        tableBody.innerHTML = '';
+        tableHeader.innerHTML = '';
+
+        if (data.error) {
+          document.getElementById('error').textContent = 'Error: ' + data.error;
+          return;
+        }
+
+        // Add table headers dynamically based on the columns of the result
+        if (data.length > 0) {
+          const headers = Object.keys(data[0]);
+          headers.forEach(header => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            tableHeader.appendChild(th);
+          });
+
+          // Add the results to the table
+          data.forEach(row => {
+            const tr = tableBody.insertRow();
+            headers.forEach(header => {
+              const td = tr.insertCell();
+              td.textContent = row[header];
+            });
+          });
+        } else {
+          // No results found
+          const tr = tableBody.insertRow();
+          const td = tr.insertCell();
+          td.colSpan = 100;
+          td.textContent = 'No data found';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('error').textContent = 'An error occurred while executing the query.';
+      });
+    }
+  </script>
+
+</body>
+</html>

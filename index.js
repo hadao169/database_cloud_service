@@ -1,21 +1,33 @@
-const sqlite3 = require("sqlite3").verbose();
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const app = express();
+const port = process.env.PORT || 3000;
 
-// Connect to SQLite database
-const dbPath = process.env.DATABASE_PATH || "./my_finance_tracking_app.db"; // Default to local if not set
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error("Could not connect to SQLite database", err);
-  } else {
-    console.log("Connected to SQLite database.");
+// Initialize the SQLite database
+const db = new sqlite3.Database('./my_finance_tracking_app.db'); // Change this to your database path
+
+// Middleware to parse JSON requests
+app.use(express.json());
+
+// Endpoint to execute custom SQL queries
+app.post('/execute-query', (req, res) => {
+  const { query } = req.body; // Get the query from the request body
+
+  if (!query) {
+    return res.json({ error: 'Query not provided' });
   }
+
+  // Execute the SQL query
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      return res.json({ error: err.message }); // Return error message if SQL execution fails
+    }
+
+    res.json(rows); // Return the rows as a JSON response
+  });
 });
 
-db.serialize(() => {
-  db.each("SELECT * FROM User;", (err, row) => {
-    if (err) {
-      console.error("Error fetching data", err);
-    } else {
-      console.log(row);
-    }
-  });
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
